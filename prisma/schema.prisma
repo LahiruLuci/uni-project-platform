@@ -1,0 +1,1078 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider  = "postgresql"
+  url       = env("DATABASE_URL")
+  directUrl = env("DIRECT_URL")
+}
+
+enum UserType {
+  STUDENT
+  INDUSTRY_PARTNER
+  ADMIN
+}
+
+enum UserStatus {
+  ACTIVE
+  SUSPENDED
+  DELETED
+}
+
+enum AuthProvider {
+  SUPABASE
+  EMAIL
+  GOOGLE
+  GITHUB
+}
+
+enum VerificationStatus {
+  UNVERIFIED
+  PENDING
+  VERIFIED
+  REJECTED
+}
+
+enum OrganizationType {
+  COMPANY
+  INVESTOR
+  INCUBATOR
+  UNIVERSITY
+  NGO
+  RECRUITER
+  RESEARCHER
+  STARTUP
+  GOVERNMENT
+  OTHER
+}
+
+enum ReviewStatus {
+  DRAFT
+  PENDING_REVIEW
+  PUBLISHED
+  REJECTED
+  ARCHIVED
+}
+
+enum ProjectType {
+  PRODUCT
+  RESEARCH
+  PROTOTYPE
+  BUSINESS
+  CREATIVE
+  SOCIAL_IMPACT
+}
+
+enum CompletionStatus {
+  COMPLETED
+  PROTOTYPE
+  RESEARCH_ONLY
+  MVP
+  CONCEPT_VALIDATED
+}
+
+enum Visibility {
+  PUBLIC
+  PRIVATE
+  REQUEST_ONLY
+}
+
+enum CommercialStatus {
+  NOT_AVAILABLE
+  OPEN_TO_COLLABORATION
+  OPEN_TO_INVESTMENT
+  OPEN_TO_LICENSE
+  OPEN_TO_ACQUISITION
+  OPEN_TO_MULTIPLE
+}
+
+enum OpportunityType {
+  COLLABORATION
+  HIRING
+  INVESTMENT
+  LICENSING
+  ACQUISITION
+  RESEARCH_PARTNER
+  SPONSORSHIP
+}
+
+enum LinkType {
+  DEMO
+  GITHUB
+  FIGMA
+  YOUTUBE
+  PAPER
+  WEBSITE
+  PRESENTATION
+  OTHER
+}
+
+enum MediaType {
+  IMAGE
+  VIDEO
+}
+
+enum FileType {
+  REPORT
+  SOURCE_CODE
+  DATASET
+  PRESENTATION
+  DOCUMENT
+  AGREEMENT
+  OTHER
+}
+
+enum FileAccessLevel {
+  OWNER_ONLY
+  REQUEST_REQUIRED
+  SHARED
+}
+
+enum VirusScanStatus {
+  PENDING
+  CLEAN
+  INFECTED
+  FAILED
+}
+
+enum ConsentStatus {
+  PENDING
+  ACCEPTED
+  REJECTED
+}
+
+enum PermissionStatus {
+  NOT_REQUIRED
+  PENDING
+  APPROVED
+  REJECTED
+}
+
+enum BadgeType {
+  USER
+  PROJECT
+}
+
+enum RequestStatus {
+  PENDING
+  ACCEPTED
+  REJECTED
+  CANCELLED
+  APPROVED
+  REVOKED
+}
+
+enum ContactPurpose {
+  HIRING
+  COLLABORATION
+  INVESTMENT
+  LICENSING
+  ACQUISITION
+  RESEARCH
+  SPONSORSHIP
+  OTHER
+}
+
+enum ConversationType {
+  CONTACT_REQUEST
+  PRIVATE_ACCESS
+  DEAL_ROOM
+  SUPPORT
+}
+
+enum DealType {
+  COLLABORATION
+  HIRING
+  INVESTMENT
+  LICENSING
+  ACQUISITION
+  RESEARCH_PARTNER
+  SPONSORSHIP
+}
+
+enum DealStatus {
+  OPEN
+  IN_DISCUSSION
+  AGREED
+  CLOSED
+  CANCELLED
+}
+
+enum DocumentType {
+  PROPOSAL
+  AGREEMENT
+  NDA
+  INVOICE
+  OTHER
+}
+
+enum BillingCycle {
+  MONTHLY
+  YEARLY
+}
+
+enum SubscriptionStatus {
+  ACTIVE
+  CANCELLED
+  EXPIRED
+  PENDING
+}
+
+enum PaymentType {
+  SUBSCRIPTION
+  CONTACT_CREDIT
+  FEATURED_LISTING
+  DEAL_ROOM
+  VERIFICATION
+}
+
+enum PaymentProvider {
+  MANUAL_BANK
+  PAYHERE
+  STRIPE
+  OTHER
+}
+
+enum PaymentStatus {
+  PENDING
+  PAID
+  FAILED
+  REFUNDED
+}
+
+enum FeaturedListingStatus {
+  ACTIVE
+  EXPIRED
+  CANCELLED
+}
+
+enum AdminReviewStatus {
+  APPROVED
+  REJECTED
+  NEEDS_CHANGES
+}
+
+enum ReportTargetType {
+  PROJECT
+  USER
+  MESSAGE
+  FILE
+}
+
+enum ReportReason {
+  FAKE
+  COPIED
+  HARMFUL
+  SPAM
+  PRIVATE_DATA
+  OTHER
+}
+
+enum ReportStatus {
+  PENDING
+  REVIEWED
+  RESOLVED
+  DISMISSED
+}
+
+enum ModerationTargetType {
+  PROJECT
+  USER
+  MESSAGE
+  FILE
+}
+
+enum ModerationActionType {
+  APPROVE
+  REJECT
+  SUSPEND
+  DELETE
+  WARN
+  RESTORE
+}
+
+enum FilePermission {
+  VIEW
+  DOWNLOAD
+}
+
+enum NdaStatus {
+  PENDING
+  SIGNED
+  EXPIRED
+  REVOKED
+}
+
+model User {
+  id              String       @id @default(uuid()) @db.Uuid
+  authUserId      String?      @unique
+  email           String       @unique
+  passwordHash    String?
+  fullName        String
+  avatarUrl       String?
+  phone           String?
+  userType        UserType
+  status          UserStatus   @default(ACTIVE)
+  authProvider    AuthProvider @default(SUPABASE)
+  emailVerified   Boolean      @default(false)
+
+  studentProfile  StudentProfile?
+  industryProfile IndustryProfile?
+
+  projects                     Project[]
+  uploadedFiles                ProjectFile[]
+  teamMemberships              ProjectTeamMember[]
+  ownershipDeclarations        ProjectOwnershipDeclaration[]
+  verificationRequests         VerificationRequest[] @relation("VerificationRequester")
+  verificationReviews          VerificationRequest[] @relation("VerificationReviewer")
+  badgeAssignments             BadgeAssignment[]
+  contactRequestsMade          ContactRequest[] @relation("ContactRequestRequester")
+  contactRequestsReceived      ContactRequest[] @relation("ContactRequestOwner")
+  privateAccessRequests        PrivateAccessRequest[] @relation("PrivateAccessRequester")
+  approvedPrivateAccessRequests PrivateAccessRequest[] @relation("PrivateAccessApprover")
+  fileAccessGrants             FileAccessGrant[] @relation("FileAccessUser")
+  fileAccessGranted            FileAccessGrant[] @relation("FileAccessGranter")
+  ndaAgreements                NdaAgreement[]
+  conversationsCreated         Conversation[]
+  conversationParticipants     ConversationParticipant[]
+  messages                     Message[]
+  dealRoomsCreated             DealRoom[]
+  dealDocumentsUploaded        DealDocument[]
+  subscriptions                Subscription[]
+  contactCredit                ContactCredit?
+  payments                     Payment[]
+  projectReviews               ProjectReview[]
+  reports                      Report[]
+  moderationActions            ModerationAction[]
+  auditLogs                    AuditLog[]
+  notifications                Notification[]
+  savedProjects                SavedProject[]
+  projectViews                 ProjectView[]
+
+  createdAt       DateTime     @default(now())
+  updatedAt       DateTime     @updatedAt
+
+  @@index([userType])
+  @@index([status])
+}
+
+model StudentProfile {
+  id                 String             @id @default(uuid()) @db.Uuid
+  userId             String             @unique @db.Uuid
+  universityId        String?            @db.Uuid
+  faculty            String?
+  degreeProgram      String?
+  academicYear       String?
+  studentNumber      String?
+  universityEmail    String?
+  bio                String?
+  portfolioUrl       String?
+  linkedinUrl        String?
+  verificationStatus VerificationStatus @default(UNVERIFIED)
+
+  user               User               @relation(fields: [userId], references: [id], onDelete: Cascade)
+  university         University?        @relation(fields: [universityId], references: [id], onDelete: SetNull)
+
+  createdAt          DateTime           @default(now())
+  updatedAt          DateTime           @updatedAt
+
+  @@index([universityId])
+  @@index([verificationStatus])
+}
+
+model IndustryProfile {
+  id                 String             @id @default(uuid()) @db.Uuid
+  userId             String             @unique @db.Uuid
+  organizationName   String
+  organizationType   OrganizationType
+  websiteUrl         String?
+  industry           String?
+  description        String?
+  location           String?
+  verificationStatus VerificationStatus @default(UNVERIFIED)
+
+  user               User               @relation(fields: [userId], references: [id], onDelete: Cascade)
+  ndaAgreements      NdaAgreement[]
+
+  createdAt          DateTime           @default(now())
+  updatedAt          DateTime           @updatedAt
+
+  @@index([organizationType])
+  @@index([verificationStatus])
+}
+
+model University {
+  id              String           @id @default(uuid()) @db.Uuid
+  name            String
+  shortName       String?
+  country         String           @default("Sri Lanka")
+  websiteUrl      String?
+
+  studentProfiles StudentProfile[]
+  projects        Project[]
+  supervisors     ProjectSupervisor[]
+
+  createdAt       DateTime         @default(now())
+
+  @@unique([name])
+}
+
+model Category {
+  id            String        @id @default(uuid()) @db.Uuid
+  name          String
+  slug          String        @unique
+  description   String?
+  icon          String?
+  sortOrder     Int           @default(0)
+  isActive      Boolean       @default(true)
+
+  subcategories Subcategory[]
+  projects      Project[]
+
+  createdAt     DateTime      @default(now())
+  updatedAt     DateTime      @updatedAt
+
+  @@index([isActive])
+  @@index([sortOrder])
+}
+
+model Subcategory {
+  id         String    @id @default(uuid()) @db.Uuid
+  categoryId String    @db.Uuid
+  name       String
+  slug       String    @unique
+  isActive   Boolean   @default(true)
+
+  category   Category  @relation(fields: [categoryId], references: [id], onDelete: Cascade)
+  projects   Project[]
+
+  createdAt  DateTime  @default(now())
+  updatedAt  DateTime  @updatedAt
+
+  @@index([categoryId])
+  @@index([isActive])
+}
+
+model Tag {
+  id        String       @id @default(uuid()) @db.Uuid
+  name      String
+  slug      String       @unique
+
+  projects  ProjectTag[]
+
+  createdAt DateTime     @default(now())
+}
+
+model Project {
+  id                String           @id @default(uuid()) @db.Uuid
+  ownerId           String           @db.Uuid
+  title             String
+  slug              String           @unique
+  shortSummary      String
+  problemStatement  String?
+  solutionOverview  String?
+  fullDescription   String?
+  categoryId        String           @db.Uuid
+  subcategoryId     String?          @db.Uuid
+  universityId      String?          @db.Uuid
+  projectType       ProjectType
+  completionStatus  CompletionStatus @default(COMPLETED)
+  visibility        Visibility       @default(PUBLIC)
+  reviewStatus      ReviewStatus     @default(DRAFT)
+  commercialStatus  CommercialStatus @default(NOT_AVAILABLE)
+  thumbnailUrl      String?
+  demoUrl           String?
+  featured          Boolean          @default(false)
+  verified          Boolean          @default(false)
+  viewCount         Int              @default(0)
+
+  owner             User             @relation(fields: [ownerId], references: [id], onDelete: Cascade)
+  category          Category         @relation(fields: [categoryId], references: [id])
+  subcategory       Subcategory?     @relation(fields: [subcategoryId], references: [id], onDelete: SetNull)
+  university        University?      @relation(fields: [universityId], references: [id], onDelete: SetNull)
+
+  tags              ProjectTag[]
+  opportunities     ProjectOpportunity[]
+  links             ProjectLink[]
+  media             ProjectMedia[]
+  files             ProjectFile[]
+  teamMembers       ProjectTeamMember[]
+  supervisors       ProjectSupervisor[]
+  ownership         ProjectOwnershipDeclaration?
+  contactRequests   ContactRequest[]
+  privateRequests   PrivateAccessRequest[]
+  reviews           ProjectReview[]
+  savedBy           SavedProject[]
+  views             ProjectView[]
+  dealRooms         DealRoom[]
+  featuredListings  FeaturedListing[]
+  ndaAgreements     NdaAgreement[]
+  conversations     Conversation[]
+
+  createdAt         DateTime         @default(now())
+  updatedAt         DateTime         @updatedAt
+  publishedAt       DateTime?
+
+  @@index([ownerId])
+  @@index([categoryId])
+  @@index([subcategoryId])
+  @@index([universityId])
+  @@index([projectType])
+  @@index([reviewStatus])
+  @@index([visibility])
+  @@index([featured])
+  @@index([createdAt])
+}
+
+model ProjectTag {
+  projectId String  @db.Uuid
+  tagId     String  @db.Uuid
+
+  project   Project @relation(fields: [projectId], references: [id], onDelete: Cascade)
+  tag       Tag     @relation(fields: [tagId], references: [id], onDelete: Cascade)
+
+  @@id([projectId, tagId])
+  @@index([tagId])
+}
+
+model ProjectOpportunity {
+  id              String          @id @default(uuid()) @db.Uuid
+  projectId       String          @db.Uuid
+  opportunityType OpportunityType
+
+  project         Project         @relation(fields: [projectId], references: [id], onDelete: Cascade)
+
+  createdAt       DateTime        @default(now())
+
+  @@unique([projectId, opportunityType])
+  @@index([opportunityType])
+}
+
+model ProjectLink {
+  id         String     @id @default(uuid()) @db.Uuid
+  projectId  String     @db.Uuid
+  linkType   LinkType
+  url        String
+  visibility Visibility  @default(PUBLIC)
+
+  project    Project    @relation(fields: [projectId], references: [id], onDelete: Cascade)
+
+  createdAt  DateTime   @default(now())
+
+  @@index([projectId])
+  @@index([linkType])
+  @@index([visibility])
+}
+
+model ProjectMedia {
+  id        String    @id @default(uuid()) @db.Uuid
+  projectId String    @db.Uuid
+  mediaType MediaType
+  url       String
+  altText   String?
+  sortOrder Int       @default(0)
+
+  project   Project   @relation(fields: [projectId], references: [id], onDelete: Cascade)
+
+  createdAt DateTime  @default(now())
+
+  @@index([projectId])
+  @@index([sortOrder])
+}
+
+model ProjectFile {
+  id              String           @id @default(uuid()) @db.Uuid
+  projectId       String           @db.Uuid
+  uploadedBy      String           @db.Uuid
+  fileName        String
+  fileType        FileType
+  storagePath     String
+  fileSize        Int
+  mimeType        String
+  accessLevel     FileAccessLevel  @default(REQUEST_REQUIRED)
+  requiresNda     Boolean          @default(true)
+  downloadAllowed Boolean          @default(false)
+  virusScanStatus VirusScanStatus  @default(PENDING)
+
+  project         Project          @relation(fields: [projectId], references: [id], onDelete: Cascade)
+  uploader        User             @relation(fields: [uploadedBy], references: [id], onDelete: Cascade)
+  accessGrants    FileAccessGrant[]
+
+  createdAt       DateTime         @default(now())
+
+  @@index([projectId])
+  @@index([uploadedBy])
+  @@index([fileType])
+  @@index([accessLevel])
+}
+
+model ProjectTeamMember {
+  id                  String        @id @default(uuid()) @db.Uuid
+  projectId           String        @db.Uuid
+  userId              String?       @db.Uuid
+  fullName            String
+  email               String
+  role                String?
+  contributionPercent Int?
+  consentStatus       ConsentStatus @default(PENDING)
+  consentToken        String?
+  consentedAt         DateTime?
+
+  project             Project       @relation(fields: [projectId], references: [id], onDelete: Cascade)
+  user                User?         @relation(fields: [userId], references: [id], onDelete: SetNull)
+
+  createdAt           DateTime      @default(now())
+
+  @@index([projectId])
+  @@index([email])
+  @@index([consentStatus])
+}
+
+model ProjectSupervisor {
+  id               String           @id @default(uuid()) @db.Uuid
+  projectId        String           @db.Uuid
+  name             String
+  email            String?
+  universityId     String?          @db.Uuid
+  role             String?
+  permissionStatus PermissionStatus @default(NOT_REQUIRED)
+
+  project          Project          @relation(fields: [projectId], references: [id], onDelete: Cascade)
+  university       University?      @relation(fields: [universityId], references: [id], onDelete: SetNull)
+
+  createdAt        DateTime         @default(now())
+
+  @@index([projectId])
+  @@index([permissionStatus])
+}
+
+model ProjectOwnershipDeclaration {
+  id                       String   @id @default(uuid()) @db.Uuid
+  projectId                String   @unique @db.Uuid
+  isGroupProject           Boolean  @default(false)
+  allMembersAgreed         Boolean  @default(false)
+  universityResourcesUsed  Boolean  @default(false)
+  companySponsored         Boolean  @default(false)
+  privateDataUsed          Boolean  @default(false)
+  containsThirdPartyAssets Boolean  @default(false)
+  patentPossible           Boolean  @default(false)
+  universityApprovalNeeded Boolean  @default(false)
+  declarationText          String?
+  declaredBy               String   @db.Uuid
+  declaredAt               DateTime @default(now())
+
+  project                  Project  @relation(fields: [projectId], references: [id], onDelete: Cascade)
+  declarer                 User     @relation(fields: [declaredBy], references: [id], onDelete: Cascade)
+}
+
+model VerificationRequest {
+  id              String             @id @default(uuid()) @db.Uuid
+  userId          String             @db.Uuid
+  targetType      String
+  targetId        String?
+  status          VerificationStatus @default(PENDING)
+  submittedData   Json?
+  reviewedBy      String?            @db.Uuid
+  reviewedAt      DateTime?
+  rejectionReason String?
+
+  user            User               @relation("VerificationRequester", fields: [userId], references: [id], onDelete: Cascade)
+  reviewer        User?              @relation("VerificationReviewer", fields: [reviewedBy], references: [id], onDelete: SetNull)
+
+  createdAt       DateTime           @default(now())
+
+  @@index([userId])
+  @@index([targetType])
+  @@index([status])
+}
+
+model Badge {
+  id          String             @id @default(uuid()) @db.Uuid
+  name        String
+  slug        String             @unique
+  description String?
+  badgeType   BadgeType
+  color       String?
+  icon        String?
+
+  assignments BadgeAssignment[]
+
+  createdAt   DateTime           @default(now())
+}
+
+model BadgeAssignment {
+  id         String    @id @default(uuid()) @db.Uuid
+  badgeId    String    @db.Uuid
+  targetType BadgeType
+  targetId   String    @db.Uuid
+  assignedBy String?   @db.Uuid
+
+  badge      Badge     @relation(fields: [badgeId], references: [id], onDelete: Cascade)
+  admin      User?     @relation(fields: [assignedBy], references: [id], onDelete: SetNull)
+
+  assignedAt DateTime  @default(now())
+
+  @@index([targetType, targetId])
+  @@index([badgeId])
+}
+
+model ContactRequest {
+  id          String         @id @default(uuid()) @db.Uuid
+  projectId   String         @db.Uuid
+  requesterId String         @db.Uuid
+  ownerId     String         @db.Uuid
+  purpose     ContactPurpose
+  message     String
+  status      RequestStatus  @default(PENDING)
+  respondedAt DateTime?
+
+  project     Project        @relation(fields: [projectId], references: [id], onDelete: Cascade)
+  requester   User           @relation("ContactRequestRequester", fields: [requesterId], references: [id], onDelete: Cascade)
+  owner       User           @relation("ContactRequestOwner", fields: [ownerId], references: [id], onDelete: Cascade)
+
+  createdAt   DateTime       @default(now())
+
+  @@index([projectId])
+  @@index([requesterId])
+  @@index([ownerId])
+  @@index([status])
+}
+
+model PrivateAccessRequest {
+  id                String        @id @default(uuid()) @db.Uuid
+  projectId          String        @db.Uuid
+  requesterId        String        @db.Uuid
+  requestedReason    String
+  requestedFilesNote String?
+  ndaRequired        Boolean       @default(true)
+  status             RequestStatus @default(PENDING)
+  approvedBy         String?       @db.Uuid
+  approvedAt         DateTime?
+  expiresAt          DateTime?
+
+  project            Project       @relation(fields: [projectId], references: [id], onDelete: Cascade)
+  requester          User          @relation("PrivateAccessRequester", fields: [requesterId], references: [id], onDelete: Cascade)
+  approver           User?         @relation("PrivateAccessApprover", fields: [approvedBy], references: [id], onDelete: SetNull)
+
+  createdAt          DateTime      @default(now())
+
+  @@index([projectId])
+  @@index([requesterId])
+  @@index([status])
+}
+
+model FileAccessGrant {
+  id            String         @id @default(uuid()) @db.Uuid
+  projectFileId String         @db.Uuid
+  userId        String         @db.Uuid
+  grantedBy     String         @db.Uuid
+  permission    FilePermission @default(VIEW)
+  expiresAt     DateTime?
+
+  projectFile   ProjectFile    @relation(fields: [projectFileId], references: [id], onDelete: Cascade)
+  user          User           @relation("FileAccessUser", fields: [userId], references: [id], onDelete: Cascade)
+  granter       User           @relation("FileAccessGranter", fields: [grantedBy], references: [id], onDelete: Cascade)
+
+  createdAt     DateTime       @default(now())
+
+  @@index([projectFileId])
+  @@index([userId])
+}
+
+model NdaAgreement {
+  id                   String           @id @default(uuid()) @db.Uuid
+  projectId            String           @db.Uuid
+  userId               String           @db.Uuid
+  organizationProfileId String?          @db.Uuid
+  ndaVersion           String
+  status               NdaStatus        @default(PENDING)
+  signedName           String?
+  signedIp             String?
+  signedAt             DateTime?
+  documentUrl          String?
+
+  project              Project          @relation(fields: [projectId], references: [id], onDelete: Cascade)
+  user                 User             @relation(fields: [userId], references: [id], onDelete: Cascade)
+  organizationProfile  IndustryProfile? @relation(fields: [organizationProfileId], references: [id], onDelete: SetNull)
+
+  createdAt            DateTime         @default(now())
+
+  @@index([projectId])
+  @@index([userId])
+  @@index([status])
+}
+
+model Conversation {
+  id               String                    @id @default(uuid()) @db.Uuid
+  projectId        String?                   @db.Uuid
+  conversationType ConversationType
+  createdBy        String                    @db.Uuid
+
+  project          Project?                  @relation(fields: [projectId], references: [id], onDelete: SetNull)
+  creator          User                      @relation(fields: [createdBy], references: [id], onDelete: Cascade)
+  participants     ConversationParticipant[]
+  messages         Message[]
+
+  createdAt        DateTime                  @default(now())
+  updatedAt        DateTime                  @updatedAt
+
+  @@index([projectId])
+  @@index([createdBy])
+}
+
+model ConversationParticipant {
+  id             String       @id @default(uuid()) @db.Uuid
+  conversationId String       @db.Uuid
+  userId         String       @db.Uuid
+  joinedAt       DateTime     @default(now())
+  lastReadAt     DateTime?
+
+  conversation   Conversation @relation(fields: [conversationId], references: [id], onDelete: Cascade)
+  user           User         @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@unique([conversationId, userId])
+  @@index([userId])
+}
+
+model Message {
+  id             String       @id @default(uuid()) @db.Uuid
+  conversationId String       @db.Uuid
+  senderId       String       @db.Uuid
+  body           String
+  attachmentUrl  String?
+  editedAt       DateTime?
+  deletedAt      DateTime?
+
+  conversation   Conversation @relation(fields: [conversationId], references: [id], onDelete: Cascade)
+  sender         User         @relation(fields: [senderId], references: [id], onDelete: Cascade)
+
+  createdAt      DateTime     @default(now())
+
+  @@index([conversationId])
+  @@index([senderId])
+}
+
+model DealRoom {
+  id        String         @id @default(uuid()) @db.Uuid
+  projectId String         @db.Uuid
+  createdBy String         @db.Uuid
+  dealType  DealType
+  status    DealStatus     @default(OPEN)
+  title     String
+  summary   String?
+
+  project   Project        @relation(fields: [projectId], references: [id], onDelete: Cascade)
+  creator   User           @relation(fields: [createdBy], references: [id], onDelete: Cascade)
+  documents DealDocument[]
+
+  createdAt DateTime       @default(now())
+  updatedAt DateTime       @updatedAt
+
+  @@index([projectId])
+  @@index([createdBy])
+  @@index([status])
+}
+
+model DealDocument {
+  id           String       @id @default(uuid()) @db.Uuid
+  dealRoomId   String       @db.Uuid
+  uploadedBy   String       @db.Uuid
+  documentType DocumentType
+  fileUrl      String
+
+  dealRoom     DealRoom     @relation(fields: [dealRoomId], references: [id], onDelete: Cascade)
+  uploader     User         @relation(fields: [uploadedBy], references: [id], onDelete: Cascade)
+
+  createdAt    DateTime     @default(now())
+
+  @@index([dealRoomId])
+}
+
+model Plan {
+  id                 String       @id @default(uuid()) @db.Uuid
+  name               String
+  priceLkr           Int
+  billingCycle       BillingCycle
+  contactCreditLimit Int          @default(0)
+  privateAccessLimit Int          @default(0)
+  isActive           Boolean      @default(true)
+
+  subscriptions      Subscription[]
+
+  createdAt          DateTime     @default(now())
+  updatedAt          DateTime     @updatedAt
+}
+
+model Subscription {
+  id        String             @id @default(uuid()) @db.Uuid
+  userId    String             @db.Uuid
+  planId    String             @db.Uuid
+  status    SubscriptionStatus @default(PENDING)
+  startedAt DateTime           @default(now())
+  expiresAt DateTime?
+
+  user      User               @relation(fields: [userId], references: [id], onDelete: Cascade)
+  plan      Plan               @relation(fields: [planId], references: [id])
+
+  @@index([userId])
+  @@index([status])
+}
+
+model ContactCredit {
+  id               String   @id @default(uuid()) @db.Uuid
+  userId           String   @unique @db.Uuid
+  creditsAvailable Int      @default(0)
+
+  user             User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  updatedAt        DateTime @updatedAt
+}
+
+model Payment {
+  id               String          @id @default(uuid()) @db.Uuid
+  userId           String          @db.Uuid
+  paymentType      PaymentType
+  amountLkr        Int
+  provider         PaymentProvider
+  providerReference String?
+  status           PaymentStatus   @default(PENDING)
+  paidAt           DateTime?
+
+  user             User            @relation(fields: [userId], references: [id], onDelete: Cascade)
+  featuredListings FeaturedListing[]
+
+  createdAt        DateTime        @default(now())
+
+  @@index([userId])
+  @@index([status])
+}
+
+model FeaturedListing {
+  id        String                @id @default(uuid()) @db.Uuid
+  projectId String                @db.Uuid
+  paymentId String?               @db.Uuid
+  startsAt  DateTime
+  endsAt    DateTime
+  status    FeaturedListingStatus @default(ACTIVE)
+
+  project   Project               @relation(fields: [projectId], references: [id], onDelete: Cascade)
+  payment   Payment?              @relation(fields: [paymentId], references: [id], onDelete: SetNull)
+
+  @@index([projectId])
+  @@index([status])
+}
+
+model ProjectReview {
+  id         String            @id @default(uuid()) @db.Uuid
+  projectId  String            @db.Uuid
+  reviewedBy String            @db.Uuid
+  status     AdminReviewStatus
+  notes      String?
+  reviewedAt DateTime          @default(now())
+
+  project    Project           @relation(fields: [projectId], references: [id], onDelete: Cascade)
+  reviewer   User              @relation(fields: [reviewedBy], references: [id], onDelete: Cascade)
+
+  @@index([projectId])
+  @@index([reviewedBy])
+}
+
+model Report {
+  id          String           @id @default(uuid()) @db.Uuid
+  reporterId  String           @db.Uuid
+  targetType  ReportTargetType
+  targetId    String           @db.Uuid
+  reason      ReportReason
+  description String?
+  status      ReportStatus     @default(PENDING)
+
+  reporter    User             @relation(fields: [reporterId], references: [id], onDelete: Cascade)
+
+  createdAt   DateTime         @default(now())
+
+  @@index([reporterId])
+  @@index([targetType, targetId])
+  @@index([status])
+}
+
+model ModerationAction {
+  id         String               @id @default(uuid()) @db.Uuid
+  adminId    String               @db.Uuid
+  targetType ModerationTargetType
+  targetId   String               @db.Uuid
+  action     ModerationActionType
+  reason     String?
+
+  admin      User                 @relation(fields: [adminId], references: [id], onDelete: Cascade)
+
+  createdAt  DateTime             @default(now())
+
+  @@index([adminId])
+  @@index([targetType, targetId])
+}
+
+model AuditLog {
+  id         String   @id @default(uuid()) @db.Uuid
+  userId     String?  @db.Uuid
+  action     String
+  entityType String
+  entityId   String?  @db.Uuid
+  metadata   Json?
+  ipAddress  String?
+
+  user       User?    @relation(fields: [userId], references: [id], onDelete: SetNull)
+
+  createdAt  DateTime @default(now())
+
+  @@index([userId])
+  @@index([entityType, entityId])
+  @@index([createdAt])
+}
+
+model Notification {
+  id        String    @id @default(uuid()) @db.Uuid
+  userId    String    @db.Uuid
+  type      String
+  title     String
+  message   String
+  readAt    DateTime?
+
+  user      User      @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  createdAt DateTime  @default(now())
+
+  @@index([userId])
+  @@index([readAt])
+}
+
+model SavedProject {
+  id        String   @id @default(uuid()) @db.Uuid
+  userId    String   @db.Uuid
+  projectId String   @db.Uuid
+
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  project   Project  @relation(fields: [projectId], references: [id], onDelete: Cascade)
+
+  createdAt DateTime @default(now())
+
+  @@unique([userId, projectId])
+  @@index([projectId])
+}
+
+model ProjectView {
+  id        String   @id @default(uuid()) @db.Uuid
+  projectId String   @db.Uuid
+  viewerId  String?  @db.Uuid
+  ipHash    String?
+  userAgent String?
+
+  project   Project  @relation(fields: [projectId], references: [id], onDelete: Cascade)
+  viewer    User?    @relation(fields: [viewerId], references: [id], onDelete: SetNull)
+
+  createdAt DateTime @default(now())
+
+  @@index([projectId])
+  @@index([viewerId])
+  @@index([createdAt])
+}
