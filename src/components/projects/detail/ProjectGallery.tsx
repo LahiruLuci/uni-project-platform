@@ -7,6 +7,11 @@ function isRenderablePublicMedia(url: string) {
 
 export function ProjectGallery({ project }: { project: ProjectDetail }) {
   const media = project.media.filter((item) => isRenderablePublicMedia(item.url)).slice(0, 4);
+  const fallbackCards = [
+    { title: "System Concept", text: `${project.category.name} project concept and public summary.` },
+    { title: "Tracking Workflow", text: project.solutionOverview ?? "Workflow details are provided by the project owner when available." },
+    { title: "Prototype / Dashboard", text: project.demoUrl ? "Demo material is available through the public demo link." : "Demo material has not been linked yet." },
+  ];
 
   return (
     <section className="rounded-[1.75rem] border border-slate-200 bg-white p-6 shadow-lg shadow-slate-900/[0.04]">
@@ -25,11 +30,14 @@ export function ProjectGallery({ project }: { project: ProjectDetail }) {
             View Demo
           </a>
         ) : (
-          <span className="inline-flex min-h-11 items-center justify-center rounded-2xl bg-slate-100 px-5 text-sm font-black text-slate-500">
-            Demo not available
+          <span className="inline-flex min-h-11 items-center justify-center rounded-2xl border border-slate-200 bg-slate-100 px-5 text-sm font-black text-slate-500">
+            Demo not available yet
           </span>
         )}
       </div>
+      {!project.demoUrl ? (
+        <p className="mt-4 text-sm font-semibold leading-6 text-slate-500">Project visuals and prototype materials are shown below.</p>
+      ) : null}
 
       <div className="mt-6 grid gap-4 sm:grid-cols-2">
         {media.length > 0 ? (
@@ -43,7 +51,15 @@ export function ProjectGallery({ project }: { project: ProjectDetail }) {
             />
           ))
         ) : (
-          <GradientVisual project={project} className="aspect-[16/10] rounded-3xl sm:col-span-2" />
+          <>
+            <GradientVisual project={project} className="aspect-[16/10] rounded-3xl sm:col-span-2" />
+            {fallbackCards.map((card) => (
+              <div key={card.title} className="rounded-3xl border border-slate-200 bg-slate-50 p-5">
+                <p className="text-xs font-black uppercase tracking-[0.18em] text-blue-600">{card.title}</p>
+                <p className="mt-3 text-sm font-semibold leading-6 text-slate-600">{card.text}</p>
+              </div>
+            ))}
+          </>
         )}
       </div>
 

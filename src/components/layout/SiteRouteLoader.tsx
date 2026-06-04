@@ -13,19 +13,19 @@ function isInternalUrl(url: string) {
 }
 
 function SiteRouteLoaderInner() {
-  const [isLoading, setIsLoading] = useState(false);
+  const [loadingTarget, setLoadingTarget] = useState<"default" | "project" | null>(null);
   const timeoutRef = useRef<number | null>(null);
 
   useEffect(() => {
-    const showLoader = () => {
-      setIsLoading(true);
+    const showLoader = (target: "default" | "project") => {
+      setLoadingTarget(target);
 
       if (timeoutRef.current) {
         window.clearTimeout(timeoutRef.current);
       }
 
       timeoutRef.current = window.setTimeout(() => {
-        setIsLoading(false);
+        setLoadingTarget(null);
         timeoutRef.current = null;
       }, 6500);
     };
@@ -46,7 +46,7 @@ function SiteRouteLoaderInner() {
       const next = `${target.pathname}${target.search}`;
 
       if (current !== next) {
-        showLoader();
+        showLoader(target.pathname.startsWith("/projects/") ? "project" : "default");
       }
     };
 
@@ -56,7 +56,7 @@ function SiteRouteLoaderInner() {
 
       const action = form.getAttribute("action") || window.location.href;
       if (isInternalUrl(action)) {
-        showLoader();
+        showLoader("default");
       }
     };
 
@@ -73,7 +73,44 @@ function SiteRouteLoaderInner() {
     };
   }, []);
 
-  if (!isLoading) return null;
+  if (!loadingTarget) return null;
+
+  if (loadingTarget === "project") {
+    return (
+      <div
+        className="pointer-events-none fixed inset-0 z-[120] grid place-items-center bg-slate-950/38 px-5 backdrop-blur-md"
+        aria-live="polite"
+        aria-label="Opening project dossier"
+      >
+        <div className="relative w-full max-w-sm overflow-hidden rounded-[2rem] border border-white/16 bg-slate-950/82 p-6 text-center text-white shadow-2xl shadow-black/30 backdrop-blur-2xl">
+          <div className="absolute inset-x-0 top-0 h-1 bg-gradient-to-r from-blue-400 via-cyan-300 to-emerald-300" />
+          <div className="absolute -left-20 -top-20 h-40 w-40 rounded-full bg-blue-500/25 blur-3xl" />
+          <div className="absolute -bottom-20 -right-20 h-40 w-40 rounded-full bg-emerald-400/20 blur-3xl" />
+
+          <div className="relative mx-auto grid h-20 w-20 place-items-center rounded-[1.75rem] border border-white/15 bg-white/10 shadow-2xl shadow-black/20">
+            <div className="absolute h-14 w-14 animate-spin rounded-2xl border border-cyan-300/20 border-t-cyan-300" />
+            <div className="h-7 w-7 rounded-xl bg-gradient-to-br from-white via-blue-100 to-emerald-200 shadow-[0_0_30px_rgba(110,231,183,0.7)]" />
+          </div>
+
+          <p className="relative mt-6 text-xs font-black uppercase tracking-[0.22em] text-emerald-200">Opening dossier</p>
+          <h2 className="relative mt-2 !text-white text-2xl font-black">Preparing project details</h2>
+          <p className="relative mt-3 text-sm font-semibold leading-6 text-white/68">
+            Loading the project overview, protection details, opportunities, and creator information.
+          </p>
+
+          <div className="relative mt-6 grid gap-2">
+            <div className="h-2 overflow-hidden rounded-full bg-white/10">
+              <div className="h-full w-1/2 animate-[route-loader_1.1s_ease-in-out_infinite] rounded-full bg-gradient-to-r from-blue-400 via-cyan-300 to-emerald-300" />
+            </div>
+            <div className="mx-auto mt-2 flex w-fit items-center gap-2 rounded-full border border-white/10 bg-white/[0.06] px-3 py-1.5 text-[0.68rem] font-black uppercase tracking-[0.14em] text-white/62">
+              <span className="h-1.5 w-1.5 rounded-full bg-emerald-300" />
+              Secure project view
+            </div>
+          </div>
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div className="pointer-events-none fixed inset-x-0 top-0 z-[120]" aria-live="polite" aria-label="Loading page">

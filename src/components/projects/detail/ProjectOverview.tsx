@@ -1,4 +1,5 @@
 import type { ProjectDetail } from "@/lib/projects/detail-queries";
+import { formatProjectValue, getCategoryLabel } from "./project-detail-utils";
 
 function DetailBlock({ title, children }: { title: string; children: React.ReactNode }) {
   return (
@@ -15,6 +16,15 @@ export function ProjectOverview({ project }: { project: ProjectDetail }) {
   return (
     <DetailBlock title="Project Overview">
       <p>{project.fullDescription ?? project.shortSummary}</p>
+      <div className="mt-6 flex flex-wrap gap-2">
+        {[formatProjectValue(project.projectType), formatProjectValue(project.completionStatus), getCategoryLabel(project)]
+          .filter(Boolean)
+          .map((item) => (
+            <span key={item} className="rounded-full border border-blue-100 bg-blue-50 px-3 py-1.5 text-xs font-black text-blue-700">
+              {item}
+            </span>
+          ))}
+      </div>
       {tags.length > 0 ? (
         <div className="mt-6">
           <p className="text-xs font-black uppercase tracking-[0.16em] text-slate-400">Tools / Methods / Technologies</p>

@@ -7,7 +7,7 @@ const navLinks = [
   { label: "Explore", href: "/explore" },
   { label: "Categories", href: "/categories" },
   { label: "For Students", href: "/students" },
-  { label: "For Companies", href: "/companies" },
+  { label: "For Industry & Partners", href: "/companies" },
   { label: "How It Works", href: "/how-it-works" },
 ];
 
@@ -33,7 +33,7 @@ function DesktopNavLinks() {
         <Link
           key={link.href}
           href={link.href}
-          className="rounded-xl px-3 py-2 text-sm font-semibold text-white/74 transition hover:bg-white/10 hover:text-white focus:outline-none focus:ring-4 focus:ring-white/15 xl:px-4"
+          className="rounded-xl px-2 py-2 text-xs font-semibold text-white/74 transition hover:bg-white/10 hover:text-white focus:outline-none focus:ring-4 focus:ring-white/15 xl:px-3 xl:text-sm 2xl:px-4"
         >
           {link.label}
         </Link>
@@ -47,7 +47,7 @@ function NavbarActions() {
     <div className="hidden items-center gap-3 lg:flex">
       <Link
         href="/companies"
-        className="hidden rounded-xl px-3 py-2 text-sm font-bold text-white/72 transition hover:bg-white/10 hover:text-white focus:outline-none focus:ring-4 focus:ring-white/15 xl:inline-flex"
+        className="hidden rounded-xl px-3 py-2 text-sm font-bold text-white/72 transition hover:bg-white/10 hover:text-white focus:outline-none focus:ring-4 focus:ring-white/15 2xl:inline-flex"
       >
         Join as Company
       </Link>

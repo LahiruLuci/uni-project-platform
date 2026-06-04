@@ -5,6 +5,7 @@ import { DocumentationPreview } from "@/src/components/projects/detail/Documenta
 import { OpportunitySection } from "@/src/components/projects/detail/OpportunitySection";
 import { ProblemSolution } from "@/src/components/projects/detail/ProblemSolution";
 import { ProjectGallery } from "@/src/components/projects/detail/ProjectGallery";
+import { ProjectFactsGrid } from "@/src/components/projects/detail/ProjectFactsGrid";
 import { ProjectHero } from "@/src/components/projects/detail/ProjectHero";
 import { ProjectOverview } from "@/src/components/projects/detail/ProjectOverview";
 import { ProjectQuickPanel } from "@/src/components/projects/detail/ProjectQuickPanel";
@@ -42,7 +43,7 @@ export default async function ProjectDetailPage({ params }: ProjectDetailPagePro
     notFound();
   }
 
-  const similarProjects = await getSimilarProjects(project.id, project.categoryId);
+  const similarProjects = await getSimilarProjects(project);
 
   return (
     <main className="min-h-screen bg-slate-50">
@@ -51,6 +52,7 @@ export default async function ProjectDetailPage({ params }: ProjectDetailPagePro
       <section className="mx-auto grid max-w-7xl gap-6 px-5 py-10 sm:px-6 lg:grid-cols-[minmax(0,1fr)_360px] lg:px-8 lg:py-14 xl:grid-cols-[minmax(0,1fr)_390px]">
         <div className="grid gap-6">
           <ProjectOverview project={project} />
+          <ProjectFactsGrid project={project} />
           <ProblemSolution project={project} />
           <ProjectGallery project={project} />
           <DocumentationPreview project={project} />

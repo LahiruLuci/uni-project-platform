@@ -3,7 +3,7 @@ import type { ProjectDetail } from "@/lib/projects/detail-queries";
 export function TrustProtectionBox({ project }: { project: ProjectDetail }) {
   const items = [
     "Contact starts through platform requests",
-    "Private files and source materials stay locked",
+    project.files.length > 0 ? `${project.files.length} private file item${project.files.length === 1 ? "" : "s"} require approved access` : "Private files require approved access when added",
     project.verified ? "Admin reviewed listing" : "Published listing review required",
     project.ownership?.allMembersAgreed ? "Team consent recorded" : "Team consent can be reviewed during access request",
     "No public phone number or email shown",
@@ -12,9 +12,9 @@ export function TrustProtectionBox({ project }: { project: ProjectDetail }) {
   return (
     <section className="overflow-hidden rounded-[1.75rem] border border-slate-800 bg-slate-950 p-6 text-white shadow-2xl shadow-slate-900/20">
       <p className="text-xs font-black uppercase tracking-[0.18em] text-emerald-300">Trust & Protection</p>
-      <h2 className="mt-2 !text-white text-2xl font-black">Safe public discovery</h2>
+      <h2 className="mt-2 !text-white text-2xl font-black">Protected Project Access</h2>
       <p className="mt-4 text-sm leading-7 text-white/70">
-        This project can be explored publicly, but private files and creator contact details are protected.
+        Public viewers can understand this project, but private files and creator contact details stay protected.
       </p>
       <div className="mt-6 grid gap-3 sm:grid-cols-2">
         {items.map((item) => (

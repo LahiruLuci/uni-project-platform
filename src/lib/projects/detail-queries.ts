@@ -106,6 +106,7 @@ export async function getProjectBySlug(slug: string) {
           fileType: true,
           accessLevel: true,
           requiresNda: true,
+          downloadAllowed: true,
           virusScanStatus: true,
         },
       },
@@ -163,24 +164,70 @@ export async function getProjectBySlug(slug: string) {
   };
 }
 
-export async function getSimilarProjects(projectId: string, categoryId: string) {
-  const projects = await prisma.project.findMany({
+export async function getSimilarProjects(project: ProjectDetail) {
+  const opportunityTypes = project.opportunities.map((opportunity) => opportunity.opportunityType);
+  const collected = new Map<string, Prisma.ProjectGetPayload<{ include: typeof similarInclude }>>();
+
+  const sameCategory = await prisma.project.findMany({
     where: {
       ...publicVisibility,
       id: {
-        not: projectId,
+        not: project.id,
       },
-      categoryId,
+      categoryId: project.categoryId,
     },
     include: similarInclude,
     orderBy: [{ featured: "desc" }, { publishedAt: "desc" }, { createdAt: "desc" }],
     take: 4,
   });
 
-  const badgesByProject = await getBadgeNames(projects.map((project) => project.id));
+  for (const item of sameCategory) collected.set(item.id, item);
 
-  return projects.map((project) => ({
-    ...project,
-    badges: badgesByProject.get(project.id) ?? [],
+  if (collected.size < 4 && project.universityId) {
+    const sameUniversity = await prisma.project.findMany({
+      where: {
+        ...publicVisibility,
+        id: {
+          notIn: [project.id, ...collected.keys()],
+        },
+        universityId: project.universityId,
+      },
+      include: similarInclude,
+      orderBy: [{ featured: "desc" }, { publishedAt: "desc" }, { createdAt: "desc" }],
+      take: 4 - collected.size,
+    });
+
+    for (const item of sameUniversity) collected.set(item.id, item);
+  }
+
+  if (collected.size < 4 && opportunityTypes.length > 0) {
+    const sameOpportunity = await prisma.project.findMany({
+      where: {
+        ...publicVisibility,
+        id: {
+          notIn: [project.id, ...collected.keys()],
+        },
+        opportunities: {
+          some: {
+            opportunityType: {
+              in: opportunityTypes,
+            },
+          },
+        },
+      },
+      include: similarInclude,
+      orderBy: [{ featured: "desc" }, { publishedAt: "desc" }, { createdAt: "desc" }],
+      take: 4 - collected.size,
+    });
+
+    for (const item of sameOpportunity) collected.set(item.id, item);
+  }
+
+  const projects = Array.from(collected.values()).slice(0, 4);
+  const badgesByProject = await getBadgeNames(projects.map((item) => item.id));
+
+  return projects.map((item) => ({
+    ...item,
+    badges: badgesByProject.get(item.id) ?? [],
   })) satisfies SimilarProject[];
 }

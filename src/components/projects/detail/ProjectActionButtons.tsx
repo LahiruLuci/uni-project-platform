@@ -16,7 +16,7 @@ export function ProjectActionButtons({ projectTitle, compact = false }: { projec
       <RequestContactModal projectTitle={projectTitle} className={primary} />
       <PrivateAccessModal projectTitle={projectTitle} className={secondary} />
       <button type="button" className={save} aria-label={`Save ${projectTitle}`}>
-        Save +
+        Save Project
       </button>
     </div>
   );

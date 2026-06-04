@@ -31,6 +31,9 @@ export function ProjectQuickPanel({ project }: { project: ProjectDetail }) {
         <Fact label="University" value={project.university?.shortName ?? project.university?.name ?? "Not listed"} />
         <Fact label="Category" value={project.category.name} />
         <Fact label="Published" value={formatDate(project.publishedAt)} />
+        <Fact label="Visibility" value={formatProjectValue(project.visibility)} />
+        <Fact label="Commercial" value={formatProjectValue(project.commercialStatus)} />
+        <Fact label="Demo" value={project.demoUrl ? "Available" : "Not yet"} />
       </div>
 
       <div className="mt-4 rounded-2xl border border-purple-200 bg-purple-50 p-4">

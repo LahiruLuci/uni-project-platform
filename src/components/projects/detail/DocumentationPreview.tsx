@@ -4,6 +4,7 @@ import { PrivateAccessModal } from "./PrivateAccessModal";
 
 export function DocumentationPreview({ project }: { project: ProjectDetail }) {
   const fileEntries = Object.entries(project.fileSummary);
+  const safeFileMetadata = project.files.slice(0, 6);
 
   return (
     <section className="rounded-[1.75rem] border border-slate-200 bg-white p-6 shadow-lg shadow-slate-900/[0.04]">
@@ -20,12 +21,21 @@ export function DocumentationPreview({ project }: { project: ProjectDetail }) {
         </p>
 
         {fileEntries.length > 0 ? (
-          <div className="mt-4 flex flex-wrap gap-2">
-            {fileEntries.map(([type, count]) => (
-              <span key={type} className="rounded-full border border-purple-200 bg-white px-3 py-1.5 text-xs font-black text-purple-800">
-                {formatProjectValue(type)} available ({count})
-              </span>
-            ))}
+          <div className="mt-5">
+            <p className="text-sm font-black text-purple-950">Available private files</p>
+            <div className="mt-3 grid gap-2 sm:grid-cols-2">
+              {safeFileMetadata.map((file, index) => (
+                <div key={`${file.fileType}-${index}`} className="rounded-2xl border border-purple-200 bg-white px-4 py-3">
+                  <p className="text-sm font-black text-purple-950">{formatProjectValue(file.fileType)}</p>
+                  <p className="mt-1 text-xs font-bold text-purple-700">
+                    {formatProjectValue(file.accessLevel)} - {file.requiresNda ? "NDA required" : "No NDA flag"} - {file.downloadAllowed ? "Download may be allowed after approval" : "View-only by default"}
+                  </p>
+                </div>
+              ))}
+            </div>
+            {fileEntries.length > safeFileMetadata.length ? (
+              <p className="mt-3 text-xs font-bold text-purple-700">More protected file metadata is available after approval.</p>
+            ) : null}
           </div>
         ) : (
           <p className="mt-4 text-sm font-bold text-purple-700">No private file metadata has been published yet.</p>

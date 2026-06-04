@@ -45,6 +45,11 @@ export function getMainOpportunities(project: ProjectDetail, limit = 2) {
   return ordered.slice(0, limit).map((type) => opportunityLabels[type] ?? formatEnumLabel(type));
 }
 
+export function getHeroMediaUrl(project: ProjectDetail) {
+  const mediaUrl = project.media.find((item) => item.url && !item.url.startsWith("/images/project-"))?.url;
+  return project.thumbnailUrl ?? mediaUrl ?? null;
+}
+
 export function getTrustBadges(project: ProjectDetail) {
   const labels = new Set<string>();
 
@@ -103,21 +108,32 @@ export function TrustBadge({ label }: { label: string }) {
 
 export function GradientVisual({ project, className = "" }: { project: ProjectDetail; className?: string }) {
   const accent = thumbnailAccents[project.category.name] ?? "from-blue-500 via-indigo-500 to-emerald-400";
-  const initials = project.category.name
-    .split(/[ /]+/)
-    .slice(0, 2)
-    .map((part) => part[0])
-    .join("");
+  const primary = project.category.name;
+  const secondary = project.subcategory?.name ?? formatProjectValue(project.projectType);
+  const concepts = [
+    `${primary} concept`,
+    `${secondary} workflow`,
+    project.demoUrl ? "Demo ready" : "Prototype preview",
+  ];
 
   return (
     <div className={`relative overflow-hidden bg-gradient-to-br ${accent} ${className}`} aria-hidden="true">
-      <div className="absolute inset-0 bg-[radial-gradient(circle_at_22%_22%,rgba(255,255,255,0.5),transparent_28%),radial-gradient(circle_at_80%_74%,rgba(15,23,42,0.32),transparent_34%)]" />
-      <div className="absolute -left-10 bottom-4 h-32 w-32 rounded-full border border-white/30 bg-white/10 backdrop-blur-sm" />
-      <div className="absolute right-5 top-5 rounded-2xl border border-white/35 bg-white/18 px-3 py-2 text-xs font-black text-white shadow-lg backdrop-blur-md">
-        {initials}
+      <div className="absolute inset-0 bg-[radial-gradient(circle_at_18%_18%,rgba(255,255,255,0.54),transparent_26%),radial-gradient(circle_at_82%_78%,rgba(15,23,42,0.35),transparent_36%)]" />
+      <div className="absolute inset-x-8 top-8 h-24 rounded-[2rem] border border-white/25 bg-white/12 backdrop-blur-sm" />
+      <div className="absolute left-6 top-6 rounded-2xl border border-white/35 bg-white/18 px-3 py-2 text-xs font-black uppercase tracking-[0.16em] text-white shadow-lg backdrop-blur-md">
+        {primary.slice(0, 12)}
       </div>
-      <div className="absolute bottom-5 left-5 right-5 rounded-2xl border border-white/30 bg-slate-950/30 px-4 py-3 text-sm font-extrabold text-white shadow-xl backdrop-blur-md">
-        {getMainOpportunities(project, 1)[0] ?? "Open for Opportunities"}
+      <div className="absolute bottom-5 left-5 right-5 grid gap-2">
+        {concepts.map((item, index) => (
+          <div
+            key={item}
+            className={`rounded-2xl border border-white/28 bg-slate-950/28 px-4 py-3 text-sm font-extrabold text-white shadow-xl backdrop-blur-md ${
+              index === 1 ? "ml-8" : index === 2 ? "ml-16" : ""
+            }`}
+          >
+            {item}
+          </div>
+        ))}
       </div>
     </div>
   );
