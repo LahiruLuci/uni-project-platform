@@ -28,7 +28,7 @@ export function isValidOptionalUrl(value: string) {
 }
 
 export function roleRedirect(userType: UserType | string | null | undefined) {
-  if (userType === "STUDENT") return "/dashboard";
+  if (userType === "STUDENT") return "/onboarding/student";
   if (userType === "INDUSTRY_PARTNER") return "/explore";
   if (userType === "ADMIN") return "/admin";
   return "/onboarding";
@@ -42,7 +42,7 @@ export function friendlyAuthError(message?: string) {
   }
 
   if (value.includes("already") || value.includes("registered") || value.includes("exists")) {
-    return "This email is already registered.";
+    return "This email is already registered. Please login instead.";
   }
 
   if (value.includes("api key") || value.includes("invalid key") || value.includes("jwt")) {

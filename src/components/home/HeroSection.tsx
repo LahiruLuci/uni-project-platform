@@ -1,4 +1,5 @@
 import Image from "next/image";
+import Link from "next/link";
 
 function HeroActions() {
   return (
@@ -16,13 +17,13 @@ function HeroActions() {
         <span className="md:hidden">Submit Project</span>
         <span className="hidden md:inline">Submit Your Project</span>
       </a>
-      <a
-        href="/companies"
+      <Link
+        href="/signup?role=industry"
         className="inline-flex min-h-10 items-center justify-center rounded-xl px-3 py-2 text-sm font-bold text-white/80 transition hover:bg-white/10 hover:text-white focus:outline-none focus:ring-4 focus:ring-white/20 md:ml-1 md:min-h-11"
         aria-label="Join as Company"
       >
         Join as Company <span className="ml-2" aria-hidden="true">&rarr;</span>
-      </a>
+      </Link>
     </div>
   );
 }

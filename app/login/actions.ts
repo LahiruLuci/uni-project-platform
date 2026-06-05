@@ -2,8 +2,8 @@
 
 import { redirect } from "next/navigation";
 import { createClient } from "@/lib/supabase/server";
-import { getAppUserByAuthId } from "@/lib/auth/auth-queries";
-import { friendlyAuthError, isValidEmail, roleRedirect, type AuthActionState } from "@/lib/auth/auth-utils";
+import { friendlyAuthError, isValidEmail, type AuthActionState } from "@/lib/auth/auth-utils";
+import { ensureUserProfile } from "@/lib/auth/profile-service";
 
 function value(formData: FormData, key: string) {
   return String(formData.get(key) ?? "").trim();
@@ -31,15 +31,13 @@ export async function loginAction(_: AuthActionState, formData: FormData): Promi
       return { ok: false, message: friendlyAuthError(error?.message) };
     }
 
-    const appUser = await getAppUserByAuthId(data.user.id);
-    if (!appUser) {
-      return {
-        ok: false,
-        message: "Your account setup is incomplete. Please complete your profile.",
-      };
+    const profile = await ensureUserProfile(data.user.id);
+
+    if (profile.status === "SUSPENDED" || profile.status === "DELETED") {
+      return { ok: false, message: profile.message };
     }
 
-    redirectTo = roleRedirect(appUser.userType);
+    redirectTo = profile.status === "MISSING_USER" && data.user.user_metadata?.role === "STUDENT" ? "/onboarding/student" : profile.redirectTo;
   } catch (error) {
     console.error("Login failed:", error);
     return { ok: false, message: "Unable to login. Please try again." };

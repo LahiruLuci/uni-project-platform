@@ -1,8 +1,8 @@
 import type { Metadata } from "next";
 import { Suspense } from "react";
 import { Plus_Jakarta_Sans, Inter, JetBrains_Mono } from "next/font/google";
-import { Navbar } from "@/src/components/layout/Navbar";
-import { SiteRouteLoader } from "@/src/components/layout/SiteRouteLoader";
+import { Navbar } from "@/components/layout/Navbar";
+import { SiteRouteLoader } from "@/components/layout/SiteRouteLoader";
 import "./globals.css";
 
 const jakarta = Plus_Jakarta_Sans({

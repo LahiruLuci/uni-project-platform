@@ -132,8 +132,14 @@ function TextAreaField({ name, label, error }: { name: string; label: string; er
   );
 }
 
-export function SignupForm({ universities }: { universities: UniversityOption[] }) {
-  const [role, setRole] = useState<SignupRole>("STUDENT");
+export function SignupForm({
+  universities,
+  initialRole = "STUDENT",
+}: {
+  universities: UniversityOption[];
+  initialRole?: SignupRole;
+}) {
+  const [role, setRole] = useState<SignupRole>(initialRole);
   const [showOptional, setShowOptional] = useState(false);
   const [state, action, isPending] = useActionState(signupAction, initialAuthState);
   const errors = state.errors ?? {};

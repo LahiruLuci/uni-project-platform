@@ -2,10 +2,10 @@
 
 import { headers } from "next/headers";
 import { redirect } from "next/navigation";
-import { AuthProvider, OrganizationType, UserStatus, VerificationStatus } from "@prisma/client";
-import { prisma } from "@/lib/prisma";
+import { OrganizationType } from "@prisma/client";
 import { createClient } from "@/lib/supabase/server";
 import { friendlyAuthError, isValidEmail, isValidOptionalUrl, roleRedirect, type AuthActionState, type SignupRole } from "@/lib/auth/auth-utils";
+import { createIndustryAccountProfile, createStudentAccountProfile, validatePublicSignupRole } from "@/lib/auth/profile-service";
 
 const organizationTypes = Object.values(OrganizationType);
 
@@ -21,7 +21,7 @@ function validateBase(formData: FormData) {
   const password = value(formData, "password");
   const confirmPassword = value(formData, "confirmPassword");
 
-  if (role !== "STUDENT" && role !== "INDUSTRY_PARTNER") errors.role = "Please select a valid account type.";
+  if (!validatePublicSignupRole(role)) errors.role = "Invalid account type.";
   if (!fullName) errors.fullName = "Please enter your full name.";
   if (!email || !isValidEmail(email)) errors.email = "Please enter a valid email address.";
   if (password.length < 8) errors.password = "Password must be at least 8 characters.";
@@ -51,110 +51,6 @@ function validateSignup(formData: FormData) {
   }
 
   return { ...base, errors };
-}
-
-async function upsertAppUser({
-  authUserId,
-  email,
-  fullName,
-  role,
-  emailVerified,
-  formData,
-}: {
-  authUserId: string;
-  email: string;
-  fullName: string;
-  role: SignupRole;
-  emailVerified: boolean;
-  formData: FormData;
-}) {
-  return prisma.$transaction(async (tx) => {
-    const existingUser = await tx.user.findFirst({
-      where: {
-        OR: [{ authUserId }, { email }],
-      },
-      select: { id: true },
-    });
-
-    const user = existingUser
-      ? await tx.user.update({
-          where: { id: existingUser.id },
-          data: {
-            authUserId,
-            email,
-            fullName,
-            userType: role,
-            status: UserStatus.ACTIVE,
-            authProvider: AuthProvider.SUPABASE,
-            emailVerified,
-          },
-        })
-      : await tx.user.create({
-          data: {
-            authUserId,
-            email,
-            fullName,
-            userType: role,
-            status: UserStatus.ACTIVE,
-            authProvider: AuthProvider.SUPABASE,
-            emailVerified,
-          },
-        });
-
-    if (role === "STUDENT") {
-      await tx.studentProfile.upsert({
-        where: { userId: user.id },
-        update: {
-          universityId: value(formData, "universityId"),
-          faculty: value(formData, "faculty"),
-          degreeProgram: value(formData, "degreeProgram"),
-          academicYear: value(formData, "academicYear"),
-          universityEmail: value(formData, "universityEmail") || null,
-          bio: value(formData, "bio") || null,
-          portfolioUrl: value(formData, "portfolioUrl") || null,
-          linkedinUrl: value(formData, "linkedinUrl") || null,
-        },
-        create: {
-          userId: user.id,
-          universityId: value(formData, "universityId"),
-          faculty: value(formData, "faculty"),
-          degreeProgram: value(formData, "degreeProgram"),
-          academicYear: value(formData, "academicYear"),
-          universityEmail: value(formData, "universityEmail") || null,
-          bio: value(formData, "bio") || null,
-          portfolioUrl: value(formData, "portfolioUrl") || null,
-          linkedinUrl: value(formData, "linkedinUrl") || null,
-          verificationStatus: VerificationStatus.UNVERIFIED,
-        },
-      });
-    }
-
-    if (role === "INDUSTRY_PARTNER") {
-      await tx.industryProfile.upsert({
-        where: { userId: user.id },
-        update: {
-          organizationName: value(formData, "organizationName"),
-          organizationType: value(formData, "organizationType") as OrganizationType,
-          websiteUrl: value(formData, "websiteUrl") || null,
-          industry: value(formData, "industry") || null,
-          location: value(formData, "location") || null,
-          description: value(formData, "description") || null,
-        },
-        create: {
-          userId: user.id,
-          organizationName: value(formData, "organizationName"),
-          organizationType: value(formData, "organizationType") as OrganizationType,
-          websiteUrl: value(formData, "websiteUrl") || null,
-          industry: value(formData, "industry") || null,
-          location: value(formData, "location") || null,
-          description: value(formData, "description") || null,
-          verificationStatus: VerificationStatus.UNVERIFIED,
-        },
-      });
-    }
-
-    return user;
-  });
 }
 
 export async function signupAction(_: AuthActionState, formData: FormData): Promise<AuthActionState> {
@@ -189,14 +85,46 @@ export async function signupAction(_: AuthActionState, formData: FormData): Prom
       return { ok: false, message: friendlyAuthError(error?.message) };
     }
 
-    await upsertAppUser({
-      authUserId: data.user.id,
-      email: data.user.email,
-      fullName: parsed.fullName,
-      role: parsed.role,
-      emailVerified: Boolean(data.user.email_confirmed_at),
-      formData,
-    });
+    const profileResult =
+      parsed.role === "STUDENT"
+        ? await createStudentAccountProfile({
+            authUserId: data.user.id,
+            email: data.user.email,
+            fullName: parsed.fullName,
+            role: "STUDENT",
+            emailVerified: Boolean(data.user.email_confirmed_at),
+            avatarUrl: data.user.user_metadata?.avatar_url,
+            universityId: value(formData, "universityId"),
+            faculty: value(formData, "faculty"),
+            degreeProgram: value(formData, "degreeProgram"),
+            academicYear: value(formData, "academicYear"),
+            universityEmail: value(formData, "universityEmail"),
+            bio: value(formData, "bio"),
+            portfolioUrl: value(formData, "portfolioUrl"),
+            linkedinUrl: value(formData, "linkedinUrl"),
+          })
+        : await createIndustryAccountProfile({
+            authUserId: data.user.id,
+            email: data.user.email,
+            fullName: parsed.fullName,
+            role: "INDUSTRY_PARTNER",
+            emailVerified: Boolean(data.user.email_confirmed_at),
+            avatarUrl: data.user.user_metadata?.avatar_url,
+            organizationName: value(formData, "organizationName"),
+            organizationType: value(formData, "organizationType") as OrganizationType,
+            websiteUrl: value(formData, "websiteUrl"),
+            industry: value(formData, "industry"),
+            location: value(formData, "location"),
+            description: value(formData, "description"),
+          });
+
+    if (!profileResult.ok) {
+      return {
+        ok: false,
+        errors: profileResult.errors,
+        message: profileResult.message ?? "Unable to complete account setup. Please try again.",
+      };
+    }
 
     if (!data.session) {
       return {
